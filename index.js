@@ -22,7 +22,7 @@ function keepAppRunning() {
         },
       );
     },
-    5 * 60 * 1000,
+  1000,
   ); // 5 minutes in milliseconds
 }
 const headerss = {
@@ -61,6 +61,7 @@ const data1 = {
 
 app.post('/get-token', async (req, res) => {
   try {
+    console.log('----------------------------a new token was generated---------------------------------');
     const response = await axios.post('https://api.timemovies.net/api/v3.5/app/auth/login', data1, { headers: headerss });
     const mytoken = response.data.result;
     res.json({ token: mytoken });
