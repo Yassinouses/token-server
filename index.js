@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const https = require('https'); // Import HTTPS
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -7,12 +8,16 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON requests
 app.use(express.json());
 
+if (!process.env.RENDER_EXTERNAL_URL || !process.env.TOKEN) {
+  console.error('RENDER_EXTERNAL_URL and TOKEN must be defined in environment variables.');
+  process.exit(1);
+}
+
 function keepAppRunning() {
   setInterval(
     () => {
       https.get(
         `${process.env.RENDER_EXTERNAL_URL}/ping`,
-        //  "https://c1de82b2-aea7-4333-b3a6-14348c1d0f1b-00-cihd67ki3snb.riker.replit.dev/"
         (resp) => {
           if (resp.statusCode === 200) {
             console.log("Ping successful");
@@ -22,9 +27,10 @@ function keepAppRunning() {
         },
       );
     },
-     5*60*1000,
+    5 * 60 * 1000,
   ); // 5 minutes in milliseconds
 }
+
 const headerss = {
   "Host": "api.timemovies.net",
   "accept": "application/json",
