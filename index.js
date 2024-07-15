@@ -7,12 +7,30 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON requests
 app.use(express.json());
 
+function keepAppRunning() {
+  setInterval(
+    () => {
+      https.get(
+        `${process.env.RENDER_EXTERNAL_URL}/ping`,
+        //  "https://c1de82b2-aea7-4333-b3a6-14348c1d0f1b-00-cihd67ki3snb.riker.replit.dev/"
+        (resp) => {
+          if (resp.statusCode === 200) {
+            console.log("Ping successful");
+          } else {
+            console.error("Ping failed");
+          }
+        },
+      );
+    },
+    5 * 60 * 1000,
+  ); // 5 minutes in milliseconds
+}
 const headerss = {
   "Host": "api.timemovies.net",
   "accept": "application/json",
   "ai": "60129f949ea4ea03d6598c06",
   "x-b": "1052",
-  "x-t": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTU5ZWU0NDgzMmM3ZGZiOTI3Y2JkOTciLCJuYW1lIjoiTWFyaWEgQmVsIiwiZW1haWwiOiJtYXJpYW5lYmVsMTc1QGdtYWlsLmNvbSIsImRhdGFfbGFuZyI6bnVsbCwiYXBwX2xhbmciOm51bGwsInN0cmVhbV9xdWFsaXR5IjoiMjQwcCIsImRvd25sb2FkX3F1YWxpdHkiOiIyNDBwIiwiaXNfdmlwIjpmYWxzZSwidmlwX3RvIjpudWxsLCJ2aXBfcGxhbiI6bnVsbCwiaXNfZ29vZ2xlX3BsYXkiOmZhbHNlLCJpc19yZXF1ZXN0Ijp0cnVlLCJpc19zdHJlYW0iOnRydWUsImlzX2Rvd25sb2FkIjp0cnVlLCJpc19zdXNwZW5kZWQiOmZhbHNlLCJzdGF0dXMiOjAsInNlYXNvbl9vcmRlciI6LTEsImlzX2VwaXNvZGVfdGh1bWIiOnRydWUsInN1YnRpdGxlX2xhbmciOiJhcmEiLCJpc19kb3dubG9hZF93aWZpX29ubHkiOmZhbHNlLCJkb3dubG9hZF9saW1pdCI6MSwiaXNfZG93bmxvYWRfY29tcGxldGVkX25vdGlmaWNhdGlvbiI6dHJ1ZSwiaXNfZG93bmxvYWRfY29tcGxldGVkX25vdGlmaWNhdGlvbl9zb3VuZCI6dHJ1ZSwiaWF0IjoxNzAyODQyMjcyLCJleHAiOjE3MDM0NDcwNzJ9.FHnrdc4Znio5OfqyRFKdFzywp2QWPfA_Gde2w1YqazA"
+  "x-t": process.env.TOKEN
 };
 
 const data1 = {
@@ -54,4 +72,5 @@ app.post('/get-token', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  keepAppRunning();
 });
