@@ -1,11 +1,4 @@
-const express = require('express');
-const axios = require('axios');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware to parse JSON requests
-app.use(express.json());
+const axios = require('axios'); // Ensure axios is imported
 
 const headerss = {
   "Host": "api.timemovies.net",
@@ -41,17 +34,10 @@ const data1 = {
   "uid": "6gB4REYZZMfLG1QbltoxaCtez2y1"
 };
 
-app.post('/get-token', async (req, res) => {
-  try {
-    const response = await axios.post('https://api.timemovies.net/api/v3.5/app/auth/login', data1, { headers: headerss });
-    const mytoken = response.data.result;
-    res.json({ token: mytoken });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'An error occurred while fetching the token.' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+axios.post('https://api.timemovies.net/api/v3.5/app/auth/login', data1, { headers: headerss })
+  .then(response1 => {
+    console.log(response1.data.result); // Should output the desired response object
+  })
+  .catch(error => {
+    console.error('Error:', error); // Catch and log any errors
+  });
