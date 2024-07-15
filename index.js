@@ -31,10 +31,15 @@ function keepAppRunning() {
   );
 }
 
-// New endpoint to return "ok" with status code 200
-app.get('/status', (req, res) => {
-  res.status(200).send('ok');
+
+app.get("/", (req, res) => {
+  res.sendStatus(200);
 });
+
+app.get("/ping", (req, res) => {
+  res.status(200).json({ message: "Ping successful" });
+});
+
 
 const headerss = {
   "Host": "api.timemovies.net",
