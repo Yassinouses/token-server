@@ -50,7 +50,29 @@ const headerss = {
 };
 
 const data1 = {
-  // ... your existing data1 object ...
+  "phoneNumber": null,
+  "tenantId": null,
+  "displayName": "Maria Bel",
+  "isAnonymous": false,
+  "email": "marianebel175@gmail.com",
+  "providerData": [
+    {
+      "email": "marianebel175@gmail.com",
+      "providerId": "google.com",
+      "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocK-rYF5SLI7sqsq4WaoPNn7QEI6wCYBrTvODXlFRfyg=s96-c",
+      "phoneNumber": null,
+      "displayName": "Maria Bel",
+      "uid": "105425574080139416537"
+    }
+  ],
+  "emailVerified": true,
+  "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocK-rYF5SLI7sqsq4WaoPNn7QEI6wCYBrTvODXlFRfyg=s96-c",
+  "providerId": "firebase",
+  "metadata": {
+    "lastSignInTime": 1701936345730,
+    "creationTime": 1700392515168
+  },
+  "uid": "6gB4REYZZMfLG1QbltoxaCtez2y1"
 };
 
 app.post('/get-token', async (req, res) => {
