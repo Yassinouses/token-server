@@ -1,93 +1,74 @@
 const express = require('express');
-const axios = require('axios');
-const https = require('https');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = 80;
 
-// Middleware to parse JSON requests
+// Initialize Supabase client
+const supabase = createClient('https://byhvjfuafvkhbjxirfbm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5aHZqZnVhZnZraGJqeGlyZmJtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwNDYzOTEwMSwiZXhwIjoyMDIwMjE1MTAxfQ.R8WfTmRyBJ63FGnC-AszT8_0sBKCam9ucsF4yU7aX-A');
+
+// Middleware to parse JSON bodies
 app.use(express.json());
 
-if (!process.env.RENDER_EXTERNAL_URL || !process.env.TOKEN) {
-  console.error('RENDER_EXTERNAL_URL and TOKEN must be defined in environment variables.');
-  process.exit(1);
-}
+// Set up multer for file uploads
+const storage = multer.memoryStorage(); // Use memory storage instead of disk storage
+const upload = multer({ storage });
 
-function keepAppRunning() {
-  setInterval(
-    () => {
-      https.get(
-        `${process.env.RENDER_EXTERNAL_URL}/ping`,
-        (resp) => {
-          if (resp.statusCode === 200) {
-            console.log("Ping successful");
-          } else {
-            console.error("Ping failed");
-          }
-        },
-      );
-    },
-    5 * 60 * 1000,
-  );
-}
-
-
-app.get("/", (req, res) => {
-  res.sendStatus(200);
-});
-
-app.get("/ping", (req, res) => {
-  res.status(200).json({ message: "Ping successful" });
-});
-
-
-const headerss = {
-  "Host": "api.timemovies.net",
-  "accept": "application/json",
-  "ai": "60129f949ea4ea03d6598c06",
-  "x-b": "1052",
-  "x-t": process.env.TOKEN
-};
-
-const data1 = {
-  "phoneNumber": null,
-  "tenantId": null,
-  "displayName": "Maria Bel",
-  "isAnonymous": false,
-  "email": "marianebel175@gmail.com",
-  "providerData": [
-    {
-      "email": "marianebel175@gmail.com",
-      "providerId": "google.com",
-      "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocK-rYF5SLI7sqsq4WaoPNn7QEI6wCYBrTvODXlFRfyg=s96-c",
-      "phoneNumber": null,
-      "displayName": "Maria Bel",
-      "uid": "105425574080139416537"
+// Endpoint to handle file uploads
+app.post('/upload', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
     }
-  ],
-  "emailVerified": true,
-  "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocK-rYF5SLI7sqsq4WaoPNn7QEI6wCYBrTvODXlFRfyg=s96-c",
-  "providerId": "firebase",
-  "metadata": {
-    "lastSignInTime": 1701936345730,
-    "creationTime": 1700392515168
-  },
-  "uid": "6gB4REYZZMfLG1QbltoxaCtez2y1"
-};
 
-app.post('/get-token', async (req, res) => {
-  try {
-    console.log('----------------------------a new token was generated-------------------------------');
-    const response = await axios.post('https://api.timemovies.net/api/v3.5/app/auth/login', data1, { headers: headerss });
-    const mytoken = response.data.result;
-    res.json({ token: mytoken });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'An error occurred while fetching the token.' });
-  }
+    const { computerId, profileName, fileType } = req.body;
+
+    if (!computerId || !profileName) {
+        return res.status(400).send('computerId and profileName are required.');
+    }
+
+    // Determine the upload path in Supabase Storage
+    const filePath = `${computerId}/${profileName}/${fileType}/${req.file.originalname}`;
+
+    try {
+        // Upload file to Supabase Storage
+        const { data, error } = await supabase
+            .storage
+            .from('your_bucket_name')
+            .upload(filePath, req.file.buffer, {
+                contentType: req.file.mimetype,
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        res.send(`File uploaded successfully: ${req.file.originalname}`);
+    } catch (error) {
+        res.status(500).send(`Error uploading file: ${error.message}`);
+    }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  keepAppRunning();
+// Endpoint to handle error messages
+app.post('/error', (req, res) => {
+    const { computerId, error } = req.body;
+    if (!computerId || !error) {
+        return res.status(400).send('computerId and error are required.');
+    }
+
+    // Log the error to the console
+    console.error(`Error from computerId ${computerId}: ${error}`);
+
+    // Optionally, write the error to a log file
+    const logMessage = `Error from computerId ${computerId}: ${error}\n`;
+    fs.appendFileSync('error.log', logMessage);
+
+    res.send('Error message received.');
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
